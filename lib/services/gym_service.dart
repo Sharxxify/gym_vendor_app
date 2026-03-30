@@ -92,10 +92,10 @@ class GymService {
       // - Images/videos go to customer backend (port 5000)
       // - Other file types (pdf/txt) keep legacy presign flow
       final String url = finalIsVideo
-          ? 'http://13.60.180.100:5000/api/v1/upload/video'
+          ? 'http://13.49.224.36:5000/api/v1/upload/video'
           : (finalIsImage
-              ? 'http://13.60.180.100:5000/api/v1/upload/image'
-              : 'http://13.60.180.100:3000/api/v1/uploads/presign');
+              ? 'http://13.49.224.36:5000/api/v1/upload/image'
+              : 'http://13.49.224.36:3000/api/v1/uploads/presign');
 
       // Headers matching curl command
       final headers = <String, String>{
