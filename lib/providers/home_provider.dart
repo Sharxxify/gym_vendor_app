@@ -323,10 +323,21 @@ class HomeProvider extends ChangeNotifier {
   /// Load customer transactions
   Future<List<Transaction>> loadCustomerTransactions(String customerId) async {
     try {
+      // 1. Try the direct API first
       final result = await _customerService.getCustomerTransactions(customerId);
 
       if (result['success'] == true && result['data'] != null) {
-        return _customerService.parseTransactions(result['data']);
+        final transactions = _customerService.parseTransactions(result['data']);
+        if (transactions.isNotEmpty) return transactions;
+      }
+
+      // 2. FALLBACK: If direct API has no records, filter the local main list
+      final localMatches = _transactions.where((t) {
+        return t.customerId == customerId;
+      }).toList();
+      
+      if (localMatches.isNotEmpty) {
+        return localMatches;
       }
     } catch (e) {
       debugPrint('❌ Error loading transactions: $e');

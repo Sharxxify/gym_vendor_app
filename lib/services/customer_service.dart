@@ -170,16 +170,14 @@ class CustomerService {
     debugPrint('📋 parseSubscriptions: ${list.length} records. First: ${list.isNotEmpty ? list[0] : "EMPTY"}');
 
     return list.map((t) {
-      // Log each raw record to inspect available fields
-      debugPrint('  → record keys: ${(t as Map).keys.toList()}  user=${t['user']}');
+      final user = t['user'];
 
       // Resolve customer name — prioritize customer_name from backend then user object
-      final user = t['user'];
       final customerName = t['customer_name'] ?? 
                   t['user_name'] ?? 
                   t['name'] ??
                   (user != null ? (user['name'] ?? user['full_name'] ?? user['first_name']) : null) ??
-                  'Customer';
+                  'User';
 
       // Booking number / ID
       final id = t['booking_number'] ?? t['id'] ?? t['_id'] ?? '';
@@ -200,13 +198,14 @@ class CustomerService {
       // Status
       final status = (t['status'] ?? t['payment_status'] ?? 'confirmed').toString().toLowerCase();
 
-      debugPrint('    → customerName="$customerName" type="$type" amount=$amount status="$status"');
+      final customerId = (user != null ? (user['_id'] ?? user['id']) : null) ?? t['user_id'] ?? t['customer_id'] ?? t['id'];
 
       return Transaction(
         id: id.toString(),
         type: type.toString(),
         amount: amount,
         dateTime: dateTime,
+        customerId: customerId?.toString(),
         customerName: customerName.toString(),
         description: status, // Use status for the label in the list
         status: status,
@@ -238,12 +237,8 @@ class CustomerService {
     return list.map((m) {
       final user = m['user'] ?? m;
       
-      // Log for debugging name mapping
-      if (list.indexOf(m) == 0) {
-        debugPrint('  → Member[0] user keys: ${(user is Map) ? user.keys.toList() : "not a map"}');
-        debugPrint('  → Member[0] raw object keys: ${(m is Map) ? m.keys.toList() : "not a map"}');
-      }
-
+      final id = (user != null ? (user['_id'] ?? user['id']) : null) ?? m['user_id'] ?? m['customer_id'] ?? m['id'] ?? '';
+      
       final name = m['customer_name'] ??
                   user['name'] ?? 
                   user['fullName'] ?? 
@@ -261,7 +256,6 @@ class CustomerService {
                    '';
       final profileImage =
           user['profile_image_url'] ?? user['profile_image'] ?? m['profile_image_url'];
-      final id = user['_id'] ?? user['id'] ?? m['user_id'] ?? m['id'] ?? '';
 
       final membershipType = m['plan_name'] ?? m['membership_type'] ?? 'Membership';
       final daysRemaining = m['days_remaining'] ?? 0;
@@ -319,7 +313,8 @@ class CustomerService {
       final user = t['user'];
       if (user == null) continue;
 
-      final userId = (user['_id'] ?? user['id'] ?? '').toString();
+      final userId = ((user != null ? (user['_id'] ?? user['id']) : null) ?? 
+                      t['user_id'] ?? t['customer_id'] ?? t['id'] ?? '').toString();
       if (userId.isEmpty || seen.containsKey(userId)) continue;
 
       final name = (t['customer_name'] ??
@@ -390,6 +385,7 @@ class CustomerService {
               type: t['title'] ?? t['type'] ?? '',
               amount: (t['amount'] ?? 0).toDouble(),
               dateTime: DateTime.tryParse(t['date'] ?? t['date_time'] ?? '') ?? DateTime.now(),
+              customerId: t['customer_id']?.toString(), // Added for consistency
               customerName: t['customer_name'],
             ))
         .toList();
