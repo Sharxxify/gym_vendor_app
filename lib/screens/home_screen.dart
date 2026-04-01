@@ -113,21 +113,38 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: AppColors.background,
-          drawer: SideMenuDrawer(isElite: homeProvider.isElite),
+          drawer: SideMenuDrawer(
+            isElite: homeProvider.isElite,
+            isVerified: homeProvider.isVerified,
+          ),
+
           body: SafeArea(
-            child: Column(
-              children: [
-                // App Bar
-                _buildAppBar(context, business, homeProvider),
-                // Elite Membership Banner - Only show if not elite
-                if (!homeProvider.isElite) _buildEliteBanner(context),
-                // Stats Overview
-                _buildStatsOverview(homeProvider),
-                // Tab Content
-                Expanded(
-                  child: _buildTabContent(homeProvider),
+            child: RefreshIndicator(
+              onRefresh: () => homeProvider.loadData(),
+              color: AppColors.primaryGreen,
+              backgroundColor: AppColors.cardBackground,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
+                  child: Column(
+                    children: [
+                      // App Bar
+                      _buildAppBar(context, business, homeProvider),
+                      // Elite Membership Banner - Only show if not elite
+                      if (!homeProvider.isElite) _buildEliteBanner(context),
+                      // Stats Overview
+                      _buildStatsOverview(homeProvider),
+                      // Tab Content
+                      Expanded(
+                        child: _buildTabContent(homeProvider),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -240,6 +257,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildEliteBanner(BuildContext context) {
+    final homeProvider = context.watch<HomeProvider>();
+    final isVerified = homeProvider.isVerified;
+    final status = homeProvider.gymStatus?.toLowerCase() ?? '';
+
     return Padding(
       padding:
           const EdgeInsets.symmetric(horizontal: AppDimensions.screenPaddingH),
@@ -249,55 +270,88 @@ class _HomeScreenState extends State<HomeScreen> {
           gradient: LinearGradient(
             colors: [
               AppColors.cardBackground,
-              AppColors.primaryOlive.withOpacity(0.3)
+              isVerified
+                  ? AppColors.primaryOlive.withOpacity(0.3)
+                  : Colors.orange.withOpacity(0.1),
             ],
           ),
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          border: Border.all(color: AppColors.inputBorder),
+          border: Border.all(
+            color: isVerified ? AppColors.inputBorder : Colors.orange.withOpacity(0.3),
+          ),
         ),
         child: Row(
           children: [
-            // Diamond icon placeholder
+            // Icon
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                color: AppColors.primaryGreen,
+              decoration: BoxDecoration(
+                color: isVerified ? AppColors.primaryGreen : Colors.orange,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.diamond, color: Colors.white, size: 18),
+              child: Icon(
+                isVerified ? Icons.diamond : Icons.pending_actions,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             AppSpacing.w12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Become a Pro Member',
-                      style: AppTextStyles.labelMedium),
-                  Text('More visibility = More bookings',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary)),
+                  Text(
+                    isVerified ? 'Become a Pro Member' : 'KYC Verification Pending',
+                    style: AppTextStyles.labelMedium,
+                  ),
+                  Text(
+                    isVerified
+                        ? 'More visibility = More bookings'
+                        : 'Upgrade to Elite after your gym is verified.',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ElitePlanScreen()),
-                );
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            if (isVerified)
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ElitePlanScreen()),
+                  );
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.primaryGreen),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                  ),
+                  child: Text(
+                    'Get Now',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primaryGreen,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primaryGreen),
+                  color: Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                 ),
-                child: Text('Get Now',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.primaryGreen)),
+                child: Text(
+                  status == 'rejected' ? 'Rejected' : 'Pending',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: Colors.orange,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),

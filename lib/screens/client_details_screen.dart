@@ -748,6 +748,10 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen>
         isCurrentMonth ? AppColors.textPrimary : AppColors.textHint;
     BoxBorder? border;
 
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final date = DateTime(_selectedYear, _selectedMonth, day);
+
     // Highlight today
     if (isToday) {
       border = Border.all(color: AppColors.primaryGreen, width: 2);
@@ -755,11 +759,19 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen>
 
     // Color based on attendance (only for current month days)
     if (isCurrentMonth) {
-      // att = 1 means present (green), att = 0 means absent (red)
-      bgColor = attendance == 1
-          ? AppColors.primaryGreen.withOpacity(0.6)
-          : AppColors.primaryRed.withOpacity(0.7);
-      textColor = Colors.white;
+      if (date.isAfter(today)) {
+        // Future date - keep transparent even if attendance is 0
+        bgColor = Colors.transparent;
+        textColor = AppColors.textPrimary;
+      } else if (attendance == 1) {
+        // Present
+        bgColor = AppColors.primaryGreen.withOpacity(0.6);
+        textColor = Colors.white;
+      } else {
+        // Absent (or past/today with 0 attendance)
+        bgColor = AppColors.primaryRed.withOpacity(0.7);
+        textColor = Colors.white;
+      }
     }
 
     return Container(

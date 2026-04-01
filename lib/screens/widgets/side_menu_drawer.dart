@@ -11,8 +11,13 @@ import '../contact_us_screen.dart';
 
 class SideMenuDrawer extends StatelessWidget {
   final bool isElite;
+  final bool isVerified;
 
-  const SideMenuDrawer({super.key, this.isElite = false});
+  const SideMenuDrawer({
+    super.key,
+    this.isElite = false,
+    this.isVerified = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +62,8 @@ class SideMenuDrawer extends StatelessWidget {
                                 builder: (_) => const UpdateProfileScreen()));
                       },
                     ),
-                    // Only show Pro Subscription if not elite
-                    if (!isElite) ...[
+                    // Only show Pro Subscription if verified and not elite
+                    if (isVerified && !isElite) ...[
                       const Divider(color: AppColors.inputBorder, height: 1),
                       _buildMenuItem(
                         context,

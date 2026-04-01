@@ -322,8 +322,12 @@ class _AttendanceTabState extends State<AttendanceTab> {
         }
       });
 
-      dayWidgets
-          .add(_buildDayCell(day, attendance: attendance, isToday: isToday));
+      dayWidgets.add(_buildDayCell(
+        day,
+        attendance: attendance,
+        isToday: isToday,
+        isFuture: date.isAfter(now),
+      ));
     }
 
     // Add next month's leading days to fill the grid (6 rows = 42 cells)
@@ -343,7 +347,10 @@ class _AttendanceTabState extends State<AttendanceTab> {
   }
 
   Widget _buildDayCell(int day,
-      {bool isCurrentMonth = true, int? attendance, bool isToday = false}) {
+      {bool isCurrentMonth = true,
+      int? attendance,
+      bool isToday = false,
+      bool isFuture = false}) {
     Color bgColor = Colors.transparent;
     Color textColor =
         isCurrentMonth ? AppColors.textPrimary : AppColors.textHint;
@@ -354,8 +361,8 @@ class _AttendanceTabState extends State<AttendanceTab> {
       border = Border.all(color: AppColors.primaryGreen, width: 2);
     }
 
-    // Color based on attendance value
-    if (isCurrentMonth && attendance != null) {
+    // Color based on attendance value - only if not a future date
+    if (isCurrentMonth && attendance != null && !isFuture) {
       if (attendance == 0) {
         bgColor = AppColors.primaryRed.withOpacity(0.8);
       } else if (attendance == 1) {

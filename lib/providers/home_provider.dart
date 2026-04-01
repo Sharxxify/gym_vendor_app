@@ -95,7 +95,12 @@ class HomeProvider extends ChangeNotifier {
   String? get gymName => _gymName;
   double? get gymRating => _gymRating;
   int? get reviewCount => _reviewCount;
+  
+  /// Current gym verification status
   String? get gymStatus => _gymStatus;
+
+  /// Whether the gym is officially verified by admin
+  bool get isVerified => _gymStatus?.toLowerCase() == 'verified';
   String? get profilePictureUrl => _profilePictureUrl;
 
   // Elite membership getters
